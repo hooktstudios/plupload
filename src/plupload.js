@@ -474,6 +474,7 @@ var plupload = {
 	@param {String} [settings.container] id of the DOM element to use as a container for uploader structures. Defaults to document.body.
 	@param {String|DOMElement} [settings.drop_element] id of the DOM element or DOM element itself to use as a drop zone for Drag-n-Drop.
 	@param {String} [settings.file_data_name="file"] Name for the file field in Multipart formated message.
+	@param {String} [settings.file_name_name="name"] Name for the name field in Multipart formated message.
 	@param {Array} [settings.filters=[]] Set of file type filters, each one defined by hash of title and extensions. `e.g. {title : "Image files", extensions : "jpg,jpeg,gif,png"}`. Dispatches `plupload.FILE_EXTENSION_ERROR`
 	@param {String} [settings.flash_swf_url] URL of the Flash swf.
 	@param {Object} [settings.headers] Custom headers to send with the upload. Hash of name/value pairs.
@@ -624,6 +625,7 @@ plupload.Uploader = function(settings) {
 		multipart : true,
 		multi_selection : true,
 		file_data_name : 'file',
+		file_name_name : 'name',
 		filters : [],
 		prevent_duplicates: false
 	}, settings);
@@ -1228,7 +1230,9 @@ plupload.Uploader = function(settings) {
 					// Build multipart request
 					if (up.settings.multipart && features.multipart) {
 						
-						args.name = file.target_name || file.name;
+						if (up.settings.file_name_name == false) {
+						  delete args['name']
+						}
 						
 						xhr.open("post", url, true);
 						
