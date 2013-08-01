@@ -11,15 +11,21 @@ is built with the future of HTML5 in mind.
 ## Table of Contents
 * [Backstory](#backstory)
 * [Structure](#structure)
-  * [File API and XHR L2 pollyfills](https://github.com/moxiecode/moxie)
+  * [File API and XHR L2 pollyfills](https://github.com/moxiecode/moxie/blob/master/README.md)
   * [Plupload API](https://github.com/moxiecode/plupload/wiki/API)
-  * UI Widget
-  * Queue Widget
+  * [UI Widget](https://github.com/moxiecode/plupload/wiki/UI.Plupload)
+  * [Queue Widget](https://github.com/moxiecode/plupload/wiki/pluploadQueue)
+* [Demos](https://github.com/jayarjo/plupload-demos/blob/master/README.md)
 * [Building Instructions](#build)
-* Getting Started
-* [Frequently Asked Questions](https://github.com/moxiecode/plupload/wiki/Frequently-Asked-Questions)
+* [Getting Started](https://github.com/moxiecode/plupload/wiki/Getting-Started)
+  * [Image Resizing on Client-Side](https://github.com/moxiecode/plupload/wiki/Image-Resizing-on-Client-Side) 
+  * [Chunking](https://github.com/moxiecode/plupload/wiki/Chunking) 
+  * [Upload to Amazon S3](https://github.com/moxiecode/plupload/wiki/Upload-to-Amazon-S3) 
+* [FAQ](https://github.com/moxiecode/plupload/wiki/Frequently-Asked-Questions)
 * [Support](#support)
+  * [Create a Fiddle](https://github.com/moxiecode/plupload/wiki/Create-a-Fiddle)
 * [Contributing](#contribute)
+* [License](#license)
 * [Contact Us](http://www.moxiecode.com/contact.php)
 
 <a name="backstory" />
@@ -54,9 +60,9 @@ easily mistaken for the Plupload itself. They are only implementations, such as 
 build by yourself out of the API.
 
 * [Low-level pollyfills (mOxie)](https://github.com/moxiecode/moxie) - have their own [code base](https://github.com/moxiecode/moxie) and [documentation](https://github.com/moxiecode/moxie/wiki) on GitHub.
-* [Plupload API](/moxiecode/plupload/wiki/API)
-* [UI Widget]()
-* [Queue Widget]()
+* [Plupload API](https://github.com/moxiecode/plupload/wiki/API)
+* [UI Widget](https://github.com/moxiecode/plupload/wiki/UI.Plupload)
+* [Queue Widget](https://github.com/moxiecode/plupload/wiki/pluploadQueue)
 
 <a name="build" />
 ### Building instructions
@@ -77,13 +83,17 @@ First of all, if you want to build custom Plupload packages you will require [No
 as this is our build environment of choice. Node.js binaries (as well as Source)
 [are available](http://nodejs.org/download/) for all major operating systems.
 
-In addtion to Node.js some additional modules will be required. Change your working directory to where you
-have extracted Plupload repo and run: `node bootstrap`. All dependencies will be downloaded and installed 
-automatically. Bootstrap will also try to populate `src/moxie/` folder with the actual mOxie source, as 
-Plupload includes it as a sub-module and doesn't contain the source. You should have 
-[git](http://git-scm.com/) installed on your system for this operation to succeed. If you don't have one 
-and you still require the source, you will need to manually download it from 
-[the repository](https://github.com/moxiecode/moxie) and extract to the above folder.
+Plupload includes _mOxie_ as a submodule, it also depends on some other repositories for building up it's dev
+environment - to avoid necessity of downloading them one by one, we recommended you to simply clone Plupload 
+with [git](http://git-scm.com/) recursively (you will require git installed on your system for this operation 
+to succeed):
+
+```
+git clone --recursive https://github.com/moxiecode/plupload.git
+```
+
+And finalize the preparation stage with: `npm install` - this will install all additional modules, including those
+required by dev and test environments. In case you would rather keep it minimal, add a `--production` flag.
 
 *Note:* Currently, for an unknown reason, locally installed Node.js modules on Windows, may not be automatically 
 added to the system PATH. So, if `jake` commands below are not recognized you will need to add them manually:
@@ -105,6 +115,9 @@ In addition to dedicated support for those who dare to buy our OEM licenses, we 
 covering every possible application case. Of course, you are welcome to file a bug report or feature request, 
 here on [GitHub](https://github.com/moxiecode/plupload/issues).
 
+Sometimes it is easier to notice the problem when bug report is accompained by the actual code. Consider providing 
+[a Plupload fiddle](https://github.com/moxiecode/plupload/wiki/Create-a-Fiddle) for the troublesome code.
+
 <a name="contribute" />
 ### Contributing
 
@@ -118,3 +131,11 @@ want to consider first.
 These basic rules help us earn a living and ensure that code remains Open Source and compatible with LGPL license. All contributions will be added to the changelog and appear in every release and on the site. 
 
 You can read more about how to contribute at: [http://www.plupload.com/contributing](http://www.plupload.com/contributing)
+
+<a name="license" />
+### License
+
+Copyright 2013, [Moxiecode Systems AB](http://www.moxiecode.com/)  
+Released under [GPLv2 License](https://github.com/moxiecode/plupload/blob/master/license.txt).
+
+We also provide [commercial license](http://www.plupload.com/commercial.php).

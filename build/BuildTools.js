@@ -1,19 +1,7 @@
 var fs = require("fs");
 var path = require("path");
 var exec = require("child_process").exec;
-
-function extend(a, b) {
-	if (b) {
-		var props = Object.getOwnPropertyNames(b);
-
-		props.forEach(function(name) {
-			var destination = Object.getOwnPropertyDescriptor(b, name);
-			Object.defineProperty(a, name, destination);
-		});
-	}
-
-	return a;
-}
+var utils = require('../src/moxie/build/utils');
 
 var color = function(s,c){return (color[c].toLowerCase()||'')+ s + color.reset;};
 color.reset = '\033[39m';
@@ -26,7 +14,7 @@ exports.uglify = function (sourceFiles, outputFile, options) {
 	var pro = require("uglify-js").uglify;
 	var code = "";
 
-	options = extend({
+	options = utils.extend({
 		mangle       : true,
 		toplevel     : false,
 		no_functions : false
@@ -58,35 +46,6 @@ exports.uglify = function (sourceFiles, outputFile, options) {
 
 	fs.writeFileSync(outputFile, ";" + code + ";");
 };
-
-exports.mkswf = function(params, cb) {
-	var defaults = {
-		exe: "mxmlc",
-		target: "10.1.0",
-		extra: "-static-link-runtime-shared-libraries=true"
-	};
-	var cmd = "<exe> -target-player=<target> -compiler.source-path=<src> -output=<output> <extra> <input>";
-
-	params = extend(defaults, params);
-
-	if (params.libs) {
-		if (typeof params.libs === 'string') {
-			params.libs = [params.libs];
-		}
-		params.extra += " -library-path+=" + params.libs.join(',');
-	}	
-
-	cmd = cmd.replace(/(<(target|output|input|src|exe|libs|extra)>)/g, function($0, $1, $2) {
-		return params[$2] || '';
-	});
-
-	exec(cmd, function(error, stdout, stderr) {
-		if (error) {
-			console.log(stderr);
-		}
-		cb();
-	});
-}
 
 exports.less = function (sourceFile, outputFile, options) {
 	var less = require('less');
@@ -168,7 +127,7 @@ exports.yuidoc = function (sourceDir, outputDir, options) {
 		sourceDir = [sourceDir];
 	}
 
-	options = extend({
+	options = utils.extend({
 		paths: sourceDir,
 		outdir: outputDir,
 		time: false
@@ -184,8 +143,10 @@ exports.yuidoc = function (sourceDir, outputDir, options) {
 		if (options.time) {
 			Y.log('Completed in ' + ((endtime - starttime) / 1000) + ' seconds' , 'info', 'yuidoc');
 		}
+
+		complete();
 	});
-}
+};
 
 exports.jshint = function (sourceDir, options) {
 	var jshint = require('jshint').JSHINT;
@@ -213,7 +174,7 @@ exports.jshint = function (sourceDir, options) {
 		}
 	}
 
-	options = extend({
+	options = utils.extend({
 		boss: true,
 		forin: false,
 		curly: true,
@@ -223,13 +184,13 @@ exports.jshint = function (sourceDir, options) {
 	process(sourceDir);
 }
 
-exports.zip = function (sourceFiles, zipFile, options) {
-	var zip = require("node-native-zip");
-	var archive = new zip();
+exports.zip = function (sourceFiles, zipFile, cb) {
+	var ZipWriter = require("moxie-zip").ZipWriter;
+	var zip = new ZipWriter();
 
 	var files = [];
 
-	function process(filePath, zipFilePath) {
+	function processFile(filePath, zipFilePath) {
 		var stat = fs.statSync(filePath);
 
 		zipFilePath = zipFilePath || filePath;
@@ -239,27 +200,26 @@ exports.zip = function (sourceFiles, zipFile, options) {
 		} else if (stat.isDirectory()) {
 			fs.readdirSync(filePath).forEach(function(fileName) {
 				if (/^[^\.]/.test(fileName)) {
-					process(path.join(filePath, fileName), path.join(zipFilePath, fileName));
+					processFile(path.join(filePath, fileName), path.join(zipFilePath, fileName));
 				}
 			});
 		}
 	}
 
-	options = extend({
-	}, options);
-
 	sourceFiles.forEach(function(filePath) {
 		if (filePath instanceof Array) {
-			process(filePath[0], filePath[1]);
+			processFile(filePath[0], filePath[1]);
 		} else {
-			process(filePath);			
+			processFile(filePath);			
 		}
 	});
 
-	archive.addFiles(files, function() {
-		archive.toBuffer(function(buffer) {
-			fs.writeFileSync(zipFile, buffer);
-		});
+	files.forEach(function(file) {
+		zip.addFile(file.name, file.path);
+	});
+
+	zip.saveAs(zipFile, function() {
+		cb();
 	});
 }
 

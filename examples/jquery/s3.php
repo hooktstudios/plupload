@@ -90,12 +90,12 @@ $signature = base64_encode(hash_hmac('sha1', $policy, $secret, true));
 
 <!-- debug 
 <script type="text/javascript" src="../../js/moxie.js"></script>
-<script type="text/javascript" src="../../js/plupload.js"></script>
+<script type="text/javascript" src="../../js/plupload.dev.js"></script>
 <script type="text/javascript" src="../../js/jquery.ui.plupload/jquery.ui.plupload.js"></script>
 -->
 
 </head>
-<body style="font:13px Verdana;background:url(../bg.jpg);color:#333">
+<body style="font: 13px Verdana; background: #eee; color: #333">
 
 <h1>Plupload to Amazon S3 Example</h1>
 
@@ -107,7 +107,7 @@ $signature = base64_encode(hash_hmac('sha1', $policy, $secret, true));
 // Convert divs to queue widgets when the DOM is ready
 $(function() {
 	$("#uploader").plupload({
-		runtimes : 'flash,silverlight',
+		runtimes : 'html5,flash,silverlight',
 		url : 'http://<?php echo $bucket; ?>.s3.amazonaws.com/',
 		max_file_size : '10mb',
 		
@@ -129,9 +129,6 @@ $(function() {
 		
 		// optional, but better be specified directly
 		file_data_name: 'file',
-		
-		// re-use widget (not related to S3, but to Plupload UI Widget)
-		multiple_queues: true,
 
 		// Specify what files to browse for
 		filters : [

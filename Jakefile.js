@@ -1,6 +1,9 @@
-var fs = require("fs");
-var path = require("path");
+/* global jake:true, desc:true, task:true, complete:true, require:true, console:true, process:true */
+/* jshint unused:false */
+var fs = require('fs');
+var path = require('path');
 var exec = require('child_process').exec;
+var Instrument = require('coverjs').Instrument;
 var tools = require('./build/BuildTools');
 var uglify = tools.uglify;
 var less = tools.less;
@@ -8,7 +11,8 @@ var yuidoc = tools.yuidoc;
 var jshint = tools.jshint;
 var zip = tools.zip;
 
-var wiki = require('./build/wiki');
+var utils = require('./src/moxie/build/utils');
+var wiki = require('./src/moxie/build/wiki');
 
 function exit(message) {
 	if (message) {
@@ -19,7 +23,7 @@ function exit(message) {
 }
 
 desc("Default build task");
-task("default", ["minifyjs", "yuidoc"], function (params) {});
+task("default", ["mkjs", "docs"], function (params) {});
 
 desc("Build release package");
 task("release", ["default", "package"], function (params) {});
@@ -39,7 +43,7 @@ task("moxie", [], function (params) {
 
 
 desc("Minify JS files");
-task("minifyjs", ["moxie"], function (params) {
+task("mkjs", [], function (params) {
 	var targetDir = "./js", moxieDir = "src/moxie";
 	
 	// Clear previous versions
@@ -49,7 +53,13 @@ task("minifyjs", ["moxie"], function (params) {
 	fs.mkdirSync(targetDir, 0755);
 
 	// Include Plupload source
-	tools.copySync('./src/plupload.js', "js/plupload.js");
+	tools.copySync('./src/plupload.js', "js/plupload.dev.js");
+
+	// Instrument Plupload code
+	fs.writeFileSync(targetDir + '/plupload.cov.js', new Instrument(fs.readFileSync('./src/plupload.js').toString(), {
+		name: 'Plupload'
+	}).instrument());
+	
 
 	// Copy compiled moxie files
 	tools.copySync(moxieDir + "/bin/flash/Moxie.swf", "js/Moxie.swf");
@@ -83,7 +93,7 @@ task("minifyjs", ["moxie"], function (params) {
 	});
 
 	var releaseInfo = tools.getReleaseInfo("./changelog.txt");
-	tools.addReleaseDetailsTo(targetDir + "/plupload.js", releaseInfo);
+	tools.addReleaseDetailsTo(targetDir + "/plupload.dev.js", releaseInfo);
 	tools.addReleaseDetailsTo(targetDir + "/plupload.min.js", releaseInfo);
 
 	var code = "";
@@ -95,14 +105,14 @@ task("minifyjs", ["moxie"], function (params) {
 
 
 desc("Generate documentation using YUIDoc");
-task("yuidoc", [], function (params) {
-	yuidoc("src", "docs", {
+task("docs", [], function (params) {
+	yuidoc(["src", "src/jquery.plupload.queue", "src/jquery.ui.plupload"], "docs", {
 		norecurse: true
 	});
-});
+}, true);
 
 desc("Generate wiki pages");
-task("wiki", [], function() {
+task("wiki", ["docs"], function() {
 	wiki("git@github.com:moxiecode/plupload.wiki.git", "wiki", "docs");
 });
 
@@ -126,24 +136,30 @@ task("package", [], function (params) {
 
 
 	// User package
-	zip([
-		"js",
-		"examples",
-		["readme.md", "readme.txt"],
-		"changelog.txt",
-		"license.txt"
-	], path.join(tmpDir, "plupload_" + releaseInfo.fileVersion + ".zip"));
-
-	// Development package
-	zip([
-		"src",
-		"js",
-		"examples",
-		"tests",
-		"build",
-		"Jakefile.js",		
-		["readme.md", "readme.txt"],
-		"changelog.txt",
-		"license.txt"
-	], path.join(tmpDir, "plupload_" + releaseInfo.fileVersion + "_dev.zip"));
-});
+	utils.inSeries([
+		function(cb) {
+			zip([
+				"js",
+				"examples",
+				["readme.md", "readme.txt"],
+				"changelog.txt",
+				"license.txt"
+			], path.join(tmpDir, "plupload_" + releaseInfo.fileVersion + ".zip"), cb);
+		},
+		function(cb) {
+			zip([
+				"src",
+				"js",
+				"examples",
+				//"tests",
+				"build",
+				"Jakefile.js",		
+				["readme.md", "readme.txt"],
+				"changelog.txt",
+				"license.txt"
+			], path.join(tmpDir, "plupload_" + releaseInfo.fileVersion + "_dev.zip"), cb);
+		}
+	], function() {
+		complete();
+	});
+}, true);
